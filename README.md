@@ -34,8 +34,11 @@ Under development. Working on MPI based parallelization.
 ## Documentation
 
 ## Screenshots
+![Demo Cumulative Slip](plots/example/cumulative_slip.png)
+![Demo Peak Sliprate](plots/example/Vfmax01.png)
 
 
+## References
 Please cite the following if using this code:
 
 [Thakur, P., Huang, Y., & Kaneko, Y. Effects of low‐velocity fault damage zones on long‐term earthquake behaviors on mature strike‐slip faults. Journal of Geophysical Research: Solid Earth, e2020JB019587.](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2020JB019587)

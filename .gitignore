@@ -8,7 +8,8 @@
 *.DS_Store
 plots/
 data/
+
 # Don't ignore these files
-!plots/examples/
+!plots/example/
 !plots/README.md
 !data/README.md
