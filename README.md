@@ -27,8 +27,9 @@ Under development. Working on MPI based parallelization.
 2. Run `install_dependencies.jl` script to install the specific packages.
 3. Open `run.jl` and edit the output file name and the resolution of the problem.
 4. Run `run.jl` from the terminal or IDE of your choice.
-5. The output files are saved in `data/$(folder_name)`.
+5. The output files are saved in `data/$(simulation_name)`.
 6. You can look at the output file from `analyze_results.jl`.
+7. For basic testing run `julia tests/basic_test_01.jl` to look at two plots saved in the `plots/$(simulation_name)` directory.
 
 ## Documentation
 

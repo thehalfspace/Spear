@@ -37,6 +37,7 @@ function main(P)
     #  W_orig = W[:,:,damage_idx]
     #  damage_amount::Float64 = 1.0
 
+    # Shear modulus ratio of damage/host rock
     alphaa = 0.90
 
     # Time solver variables
@@ -80,9 +81,6 @@ function main(P)
     psi0 .= psi[:]
 
     isolver::Int = 1
-
-    # Skip lines 486-490
-    # Skip lines 492-507: Outloc1, 2, variables.
 
     # Some more initializations
     r::Vector{Float64} = zeros(P[1].nglob)
@@ -132,7 +130,8 @@ function main(P)
     # Linear solver stuff
     kni = -Ksparse[P[4].FltNI, P[4].FltNI]
     nKsparse = -Ksparse
-    # multigrid
+    
+    # algebraic multigrid preconditioner
     ml = ruge_stuben(kni)
     p = aspreconditioner(ml)
     tmp = copy(a)
@@ -146,8 +145,6 @@ function main(P)
     #  Ksparse = ThreadedMul(Ksparse)
     #  nKsparse = ThreadedMul(nKsparse)
     #  kni = ThreadedMul(kni)
-
-    # Temporary Debugging variables: CLEAN UP LATER
 
 
     # Damage evolution stuff
