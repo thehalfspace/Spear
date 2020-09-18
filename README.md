@@ -32,6 +32,7 @@ Under development. Working on MPI based parallelization.
 7. For basic testing run `julia tests/basic_test_01.jl` to look at two plots saved in the `plots/$(simulation_name)` directory.
 
 ## Documentation
+- Coming soon
 
 ## Screenshots
 <img src="https://github.com/thehalfspace/Spear/blob/master/plots/example/cumulative_slip.png" alt="drawing" width="600"/>
