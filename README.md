@@ -34,8 +34,8 @@ Under development. Working on MPI based parallelization.
 ## Documentation
 
 ## Screenshots
-![Demo Cumulative Slip](https://github.com/thehalfspace/Spear/blob/master/plots/example/cumulative_slip.png =50x)
-![Demo Peak Sliprate](https://github.com/thehalfspace/Spear/blob/master/plots/example/Vfmax01.png =50x)
+<img src="https://github.com/thehalfspace/Spear/blob/master/plots/example/cumulative_slip.png" alt="drawing" width="200"/>
+<img src="https://github.com/thehalfspace/Spear/blob/master/plots/example/Vfmax01.png" alt="drawing" width="200"/>
 
 
 ## References
