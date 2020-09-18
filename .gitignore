@@ -1,0 +1,11 @@
+*.swp
+*.out
+*.jld2
+*.pbs
+*.png
+*.pdf
+*.jpg
+*.gif
+*.DS_Store
+data/
+plots/
