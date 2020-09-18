@@ -34,8 +34,8 @@ Under development. Working on MPI based parallelization.
 ## Documentation
 
 ## Screenshots
-<img src="https://github.com/thehalfspace/Spear/blob/master/plots/example/cumulative_slip.png" alt="drawing" width="200"/>
-<img src="https://github.com/thehalfspace/Spear/blob/master/plots/example/Vfmax01.png" alt="drawing" width="200"/>
+<img src="https://github.com/thehalfspace/Spear/blob/master/plots/example/cumulative_slip.png" alt="drawing" width="600"/>
+<img src="https://github.com/thehalfspace/Spear/blob/master/plots/example/Vfmax01.png" alt="drawing" width="600"/>
 
 
 ## References
