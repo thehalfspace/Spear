@@ -1,12 +1,14 @@
 # Ignore files with these extensions
 *.swp
 *.out
-*.pbs
-*.png
-*.pdf
-*.jpg
-*.gif
+# *.pbs
+# *.pdf
+# *.jpg
+# *.gif
 *.DS_Store
-
+plots/
+data/
 # Don't ignore these files
 !plots/examples/
+!plots/README.md
+!data/README.md
