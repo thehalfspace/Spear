@@ -1,8 +1,6 @@
-# SPectral element based EARthquake cycle simulator (SPEAR) 
+# SPEAR: SPectral element based EARthquake cycle simulator 
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-
-**Insert Badges here**
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)  **Insert other Badges here**
 
 Numerical simulation of long-term earthquake cycles on a two-dimensional vertical strike-slip fault with dynamic treatment of inertial effects. Written in [Julia](https://julialang.org).
 
@@ -25,6 +23,12 @@ Under development. Working on MPI based parallelization.
 - [FEMSparse](https://github.com/ahojukka5/FEMSparse.jl)
 
 ## Quickstart guide
+1. Install Julia >= 1.1 (preferably the latest version).
+2. Run `install_dependencies.jl` script to install the specific packages.
+3. Open `run.jl` and edit the output file name and the resolution of the problem.
+4. Run `run.jl` from the terminal or IDE of your choice.
+5. The output files are saved in `data/$(folder_name)`.
+6. You can look at the output file from `analyze_results.jl`.
 
 ## Documentation
 

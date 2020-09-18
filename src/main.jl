@@ -4,106 +4,25 @@
 #
 #   Written in: Julia 1.0
 #
-#	Created: 06/20/2018
+#	Created: 09/18/2022
 #   Author: Prithvi Thakur (Original code by Kaneko et al. 2011)
 #
 #	Adapted from Kaneko et al. (2011)
 #	and J.P. Ampuero's SEMLAB
 #
-#   CHANGELOG:
-#       * 06-15-2019: Assemble stiffness as sparse matrix
-#       * 04-20-2019: Implement multithreading for element calculations
-#       * 02-19-2019: Remove all the shared array stuff
-#       * 10-24-2018: Correct the free surface boundary condition
-#       * 08-27-2018: Remove the dependency on Parameters.jl
-#       * 08-26-2018: Using distributed for loop in PCG and NRsearch
-#       * 08-24-2018: Create a separate function for NRsearch loop: FBC()
-#       * 08-20-2018: Use JLD2 to store data instead of JLD
-#       * 08-14-2018: Modify script to automatically make plots directory
-#                     and save.
-#
-#       (Old stuff: I don't remember the dates (08/2017-08/2018))
-#       * Change functions to adapt Julia 1.0 changes
-#       * Move the cumulative slip calculation outside the time loop
-#       * Add scripts to compute the earthquake magnitude
-#       * Add plots script for various plotting functions
-#       * Implemented elastic halfspace
-#       * Setup for a shallow fault zone
-#       * Organize everything into structs and functions
-#       * Interpolation for initial stress and friction in halfspace
-#       * Add separate files for parameters, initial conditions, functions
 ###############################################################################
-#  include("$(@__DIR__)/damageEvol.jl")	    #	Set Parameters
 
- # Threaded matrix multiplication
- import Base: eltype, size
- #  import LinearAlgebra: A_mul_B!
- using Base.Threads
+# Healing exponential function
+function healing2(t,tStart,dam)
+    """ hmax: coseismic damage amplitude
+        r: healing rate (0.05 => 80 years to heal completely)
+                        (0.8 => 8 years to heal completely)
+    """
+    hmax = 0.04
+    r = 0.5    # 0.05 (debug05)
 
- struct ThreadedMul{Tv,Ti}
-         A::SparseMatrixCSC{Tv,Ti}
- end
-
- function LinearAlgebra.mul!(y::AbstractVector, M::ThreadedMul, x::AbstractVector)
-     @threads for i = 1 : M.A.n
-          _threaded_mul!(y, M.A, x, i)
-     end
-      y
- end
-
- @inline function _threaded_mul!(y, A::SparseMatrixCSC{Tv}, x, i) where {Tv}
-     s = zero(Tv)
-     @inbounds for j = A.colptr[i] : A.colptr[i + 1] - 1
-         s += A.nzval[j] * x[A.rowval[j]]
-     end
-
-     @inbounds y[i] = s
-     y
- end
- eltype(M::ThreadedMul) = eltype(M.A)
- size(M::ThreadedMul, I...) = size(M.A, I...)
-
-# Damage multiplier
-#  d1 = P[3].vs1
-#  d2 = P[3].vs2
-
-
-#  α_is(t, co) = (log10(t/P[1].yr2sec)/log10(1.0e4 - t/P[1].yr2sec) + co)^2
-#  α_s(t, co) = (co*(1 - 1.0e-3*t))^2
-
-
-# Damage multiplier function
-function αD(α0, t, tStart, co, isolver)
-    if isolver == 1
-        aa = (log10(t/P[1].yr2sec)/log10(1.0e4 - t/P[1].yr2sec)) + co
-
-        if aa < α0
-            return α0
-        elseif aa > 1
-            return 1
-        else
-            return aa
-        end
-
-    #  elseif isolver == 2
-        #  aa = (co - 1.0e-3*(t - tStart))
-
-        #  if aa < 0.6
-            #  return 0.6
-        #  elseif aa > 1
-            #  return 1
-        #  else
-            #  return aa
-        #  end
-    else
-        return 1
-    end
-
+    hmax*(1 .- exp.(-r*(t .- tStart)/P[1].yr2sec)) .+ dam
 end
-
-
-# Save output to file dynamically
-file  = jldopen("$(@__DIR__)/data/test02.jld2", "w")
 
 function main(P)
 
@@ -118,32 +37,7 @@ function main(P)
     #  W_orig = W[:,:,damage_idx]
     #  damage_amount::Float64 = 1.0
 
-
-    #  wgll2::Array{Float64,2} = S.wgll*S.wgll';
-
-    # Some Stuff
-    res = 2
-    LX::Int = 48e3  # depth dimension of rectangular domain
-    LY::Int = 30e3 # off fault dimenstion of rectangular domain
-
-    NelX::Int = 30*res # no. of elements in x
-    NelY::Int = 20*res # no. of elements in y
-
-    dxe::Float64 = LX/NelX #	Size of one element along X
-    dye::Float64 = LY/NelY #	Size of one element along Y
-
-
-    rho1 = 2670
-    vs1 = 3464
-
-    ThickX = LX - 24e3
-    ThickY::Float64 = ceil(5e3/dye)*dye   # ~ 0.25*2 km wide
-
-    iglob = P[6]
-    ngll = P[7]
-    wgll2 = P[8]
-    nglob = P[9]
-
+    alphaa = 0.90
 
     # Time solver variables
     dt::Float64 = P[2].dt0
@@ -201,32 +95,12 @@ function main(P)
     dd::Vector{Float64} = zeros(P[1].nglob)
     dnew::Vector{Float64} = zeros(length(P[4].FltNI))
 
-    # Preallocate variables with unknown size
-    #  seismic_stress, seismic_slipvel, seismic_slip
-    #  index_eq
-    #  is_stress, is_slipvel, is_slip
-    #  dSeis, vSeis, aSeis
-    #  tStart, tEnd
-    #  taubefore, tauafter, delfafter
-    #  hypo, time_, Vfmax
-    nseis = length(P[4].out_seis)
-
-    output = results(zeros(P[1].FltNglob, 8000), zeros(P[1].FltNglob, 8000),
-                     zeros(P[1].FltNglob, 8000),
-                     zeros(10000),
-                     zeros(P[1].FltNglob, 2000), zeros(P[1].FltNglob, 2000),
-                     zeros(P[1].FltNglob, 2000),
-                     zeros(80000,nseis), zeros(80000,nseis), zeros(80000,nseis),
-                     zeros(400), zeros(400),
-                     zeros(P[1].FltNglob, 400), zeros(P[1].FltNglob, 400),
-                     zeros(P[1].FltNglob, 400), zeros(400), zeros(700000),
-                     zeros(700000))
 
     # Save output variables at certain timesteps: define those timesteps
-    tvsx::Float64 = 2*P[1].yr2sec  # 2 years for interseismic period
+    tvsx::Float64 = 2e-0*P[1].yr2sec  # 2 years for interseismic period
     tvsxinc::Float64 = tvsx
 
-    tevneinc::Float64 = 0.5    # 0.5 second for seismic period
+    tevneinc::Float64 = 0.1    # 0.5 second for seismic period
     delfref = zeros(P[1].FltNglob)
 
     # Iterators
@@ -251,11 +125,9 @@ function main(P)
 
     # on fault and off fault stiffness
     Ksparse = P[5]
-    # Indices of Stiffness matrix corresponding to the damaged zone
-    #  Ksparse = rcmpermute(P[5])
 
-    # Initial intact rigidity ratio b/w host rock and damage
-    co = 1
+    # Intact rock stiffness
+    Korig = copy(Ksparse)   # K original
 
     # Linear solver stuff
     kni = -Ksparse[P[4].FltNI, P[4].FltNI]
@@ -265,36 +137,63 @@ function main(P)
     p = aspreconditioner(ml)
     tmp = copy(a)
 
-    # faster matrix multiplication
-    #   Ksparse = Ksparse'
-    #   nKsparse = nKsparse'
-    #   kni = kni'
 
-    Ksparse = ThreadedMul(Ksparse)
-    nKsparse = ThreadedMul(nKsparse)
-    kni = ThreadedMul(kni)
+    # faster matrix multiplication
+     #  Ksparse = Ksparse'
+     #  nKsparse = nKsparse'
+     #  kni = kni'
+
+    #  Ksparse = ThreadedMul(Ksparse)
+    #  nKsparse = ThreadedMul(nKsparse)
+    #  kni = ThreadedMul(kni)
 
     # Temporary Debugging variables: CLEAN UP LATER
-    alphaa = ones(1000000)
 
-    tStart = dt
 
+    # Damage evolution stuff
+    did = P[10]
+    dam = alphaa
+
+    # Save parameters to file
+    open(string(out_dir,"params.out"), "w") do io
+        write(io, join(P[3].Seff/1e6, " "), "\n")
+        write(io, join(P[3].tauo/1e6, " "), "\n")
+        write(io, join(-P[3].FltX/1e3, " "), "\n")
+        write(io, join(P[3].cca, " "), "\n")
+        write(io, join(P[3].ccb, " "), "\n")
+        write(io, join(P[3].xLf, " "), "\n")
+    end
+
+
+    # Open files to begin writing
+    open(string(out_dir,"stress.out"), "w") do stress
+    open(string(out_dir,"sliprate.out"), "w") do sliprate
+    open(string(out_dir,"slip.out"), "w") do slip
+    open(string(out_dir,"delfsec.out"), "w") do dfsec
+    open(string(out_dir,"delfyr.out"), "w") do dfyr
+    open(string(out_dir,"event_time.out"), "w") do event_time
+    open(string(out_dir,"event_stress.out"), "w") do event_stress
+    open(string(out_dir,"coseismic_slip.out"), "w") do dfafter
+    open(string(out_dir,"time_velocity.out"), "w") do Vf_time
 
     #....................
     # Start of time loop
     #....................
     it = 0
     t = 0.
+    Vfmax = 0.
+    
+    tStart2 = dt
+    tStart = dt
+    tEnd = dt
+    taubefore = P[3].tauo
+    tauafter = P[3].tauo
+    delfafter = 2*d[P[4].iFlt] .+ P[2].Vpl*t 
+    hypo = 0.
 
     while t < P[1].Total_time
         it = it + 1
         t = t + dt
-
-        if it == 1
-            #  alphaa[it] = 1
-        end
-
-        output.time_[it] = t
 
         if isolver == 1
 
@@ -362,9 +261,36 @@ function main(P)
             d[P[4].FltIglobBC] .= 0.
             v[P[4].FltIglobBC] .= 0.
 
-            # If isolver != 1, or max slip rate is < 10^-2 m/s
-        else
+            #---------------
+            # Healing stuff: Ignore for now
+            # --------------
+            #  if it > 3
+            #  #  if t > 12*P[1].yr2sec
+                #  alphaa = healing2(t, tStart2, dam)
+                #  #  alphaa[it] = αD(t, tStart2, dam)
 
+                #  for id in did
+                    #  Ksparse[id] = alphaa*Korig[id]
+                #  end
+
+                #  #  println("alpha healing = ", alphaa[it])
+
+                #  # Linear solver stuff
+                #  kni = -Ksparse[P[4].FltNI, P[4].FltNI]
+                #  nKsparse = -Ksparse
+                #  # multigrid
+                #  ml = ruge_stuben(kni)
+                #  p = aspreconditioner(ml)
+
+                #  # faster matrix multiplication
+                #  #  Ksparse = Ksparse'
+                #  #  nKsparse = nKsparse'
+                #  #  kni = kni'
+            #  end
+
+        
+        # If isolver != 1, or max slip rate is < 10^-2 m/s
+        else
 
             dPre .= d
             vPre .= v
@@ -418,46 +344,85 @@ function main(P)
 
         Vfmax = 2*maximum(v[P[4].iFlt]) .+ P[2].Vpl
 
-
-        #----
-        # Output variables at different depths for every timestep
-        # Omitted the part of code from line 871 - 890, because I
-        # want to output only certain variables each timestep
-        #----
-
-
         #-----
         # Output the variables before and after events
         #-----
         if Vfmax > 1.01*P[2].Vthres && slipstart == 0
             it_s = it_s + 1
             delfref = 2*d[P[4].iFlt] .+ P[2].Vpl*t
+            
             slipstart = 1
-            output.tStart[it_s] = output.time_[it]
-            tStart = output.time_[it]
-            output.taubefore[:,it_s] = (tau +P[3].tauo)./1e6
+
+            tStart = t
+            taubefore = (tau +P[3].tauo)./1e6
+
             vhypo, indx = findmax(2*v[P[4].iFlt] .+ P[2].Vpl)
-            output.hypo[it_s] = P[3].FltX[indx]
+            hypo = P[3].FltX[indx]
 
         end
         if Vfmax < 0.99*P[2].Vthres && slipstart == 1
             it_e = it_e + 1
-            output.delfafter[:,it_e] = 2*d[P[4].iFlt] .+ P[2].Vpl*t .- delfref
-            output.tauafter[:,it_e] = (tau + P[3].tauo)./1e6
-            output.tEnd[it_e] = output.time_[it]
+            delfafter = 2*d[P[4].iFlt] .+ P[2].Vpl*t .- delfref
+            
+            tEnd = t 
+            tauafter = (tau +P[3].tauo)./1e6
+            
+            # Save start and end time and stress
+            write(event_time, join(hcat(tStart,tEnd, -hypo), " "), "\n")
+            write(event_stress, join(hcat(taubefore, tauafter), " "), "\n")
+            write(dfafter, join(delfafter, " "), "\n")
+            
             slipstart = 0
+            
+            # at the end of each earthquake, the shear wave velocity in the damaged zone reduces by 10%
+
+                # Time condition of 10 years
+                #  if t > 10*P[1].yr2sec
+
+                    # use this for no permanent damage
+                    #  alphaa = 0.6
+                    #  dam = alphaa
+
+
+                    # Use this for permanent damage
+                    #  alphaa = alphaa - 0.05
+                    #  dam = alphaa
+                    #  if dam < 0.60
+                        #  alphaa = 0.60
+                        #  dam = 0.60
+                    #  end
+                    
+                    tStart2 = t 
+                    
+                    #  for id in did
+                        #  Ksparse[id] = alphaa*Korig[id]
+                    #  end
+
+                    #  # Linear solver stuff
+                    #  kni = -Ksparse[P[4].FltNI, P[4].FltNI]
+                    #  nKsparse = -Ksparse
+                    #  # multigrid
+                    #  ml = ruge_stuben(kni)
+                    #  p = aspreconditioner(ml)
+
+                #  end
+
+                #  println("alphaa = ", alphaa)
+
+            #  end
 
         end
+        
+
+
         #-----
         # Output the variables certain timesteps: 2yr interseismic, 1 sec dynamic
         #-----
-        if output.time_[it] > tvsx
+        if t > tvsx
             ntvsx = ntvsx + 1
             idd += 1
-            output.is_slip[:,ntvsx] = 2*d[P[4].iFlt] .+ P[2].Vpl*t
-            output.is_slipvel[:,ntvsx] = 2*v[P[4].iFlt] .+ P[2].Vpl
-            output.is_stress[:,ntvsx] = (tau + P[3].tauo)./1e6
-            output.index_eq[idd] = 1
+            #  write(stress, join((tau + P[3].tauo)./1e6, " "), "\n")
+            write(dfyr, join(2*d[P[4].iFlt] .+ P[2].Vpl*t, " "), "\n")
 
             tvsx = tvsx + tvsxinc
         end
@@ -470,20 +435,15 @@ function main(P)
                 tevneb = t
                 tevne = tevneinc
 
-                output.seismic_slip[:,nevne] = 2*d[P[4].iFlt] .+ P[2].Vpl*t
-                output.seismic_slipvel[:,nevne] = 2*v[P[4].iFlt] .+ P[2].Vpl
-                output.seismic_stress[:,nevne] = (tau + P[3].tauo)./1e6
-                output.index_eq[idd] = 2
+                #  write(stress, join((tau + P[3].tauo)./1e6, " "), "\n")
+                write(dfsec, join(2*d[P[4].iFlt] .+ P[2].Vpl*t, " "), "\n")
             end
 
             if idelevne == 1 && (t - tevneb) > tevne
                 nevne = nevne + 1
                 idd += 1
 
-                output.seismic_slip[:,nevne] = 2*d[P[4].iFlt] .+ P[2].Vpl*t
-                output.seismic_slipvel[:,nevne] = 2*v[P[4].iFlt] .+ P[2].Vpl
-                output.seismic_stress[:,nevne] = (tau + P[3].tauo)./1e6
-                output.index_eq[idd] = 2
+                write(dfsec, join(2*d[P[4].iFlt] .+ P[2].Vpl*t, " "), "\n")
                 tevne = tevne + tevneinc
             end
 
@@ -491,82 +451,49 @@ function main(P)
             idelevne = 0
         end
 
+        current_sliprate = 2*v[P[4].iFlt] .+ P[2].Vpl
+
         # Output timestep info on screen
         if mod(it,500) == 0
-            @printf("Time (yr) = %1.5g\n", t/P[1].yr2sec)
+            @printf("Time (yr) = %1.5g\n", t/P[1].yr2sec) 
+            #  println("Vfmax = ", maximum(current_sliprate))
         end
 
 
-        # output variables at prescribed locations every 10 timesteps
+        # Write stress, sliprate, slip to file every 10 timesteps
         if mod(it,10) == 0
-            rit += 1
-            output.dSeis[rit,:] = d[P[4].out_seis]
-            output.vSeis[rit,:] = v[P[4].out_seis]
-            output.aSeis[rit,:] = a[P[4].out_seis]
+            write(sliprate, join(2*v[P[4].iFlt] .+ P[2].Vpl, " "), "\n")
+            write(stress, join((tau + P[3].tauo)./1e6, " "), "\n")
         end
 
         # Determine quasi-static or dynamic regime based on max-slip velocity
+        #  if isolver == 1 && Vfmax < 5e-3 || isolver == 2 && Vfmax < 2e-3
         if isolver == 1 && Vfmax < 5e-3 || isolver == 2 && Vfmax < 2e-3
             isolver = 1
         else
             isolver = 2
         end
 
-        output.Vfmax[it] = Vfmax
-
-        current_sliprate = 2*v[P[4].iFlt] .+ P[2].Vpl
+        # Write max sliprate and time
+        write(Vf_time, join(hcat(t,Vfmax,Vf[end], alphaa), " "), "\n")
 
         # Compute next timestep dt
         dt = dtevol!(dt , dtmin, P[3].XiLf, P[1].FltNglob, NFBC, current_sliprate, isolver)
 
+
     end # end of time loop
 
-    # Remove zeros from preallocated vectors
-    output.seismic_stress   = output.seismic_stress[:,1:nevne]
-    output.seismic_slipvel  = output.seismic_slipvel[:,1:nevne]
-    output.seismic_slip     = output.seismic_slip[:,1:nevne]
-    output.index_eq         = output.index_eq[1:idd]
-    output.is_stress        = output.is_stress[:,1:ntvsx]
-    output.is_slipvel       = output.is_slipvel[:,1:ntvsx]
-    output.is_slip          = output.is_slip[:,1:ntvsx]
-    output.dSeis            = output.dSeis[1:rit,:]
-    output.vSeis            = output.vSeis[1:rit,:]
-    output.aSeis            = output.aSeis[1:rit,:]
-    output.tStart           = output.tStart[1:it_s]
-    output.tEnd             = output.tEnd[1:it_e]
-    output.taubefore        = output.taubefore[:,1:it_s]
-    output.tauafter         = output.tauafter[:,1:it_e]
-    output.delfafter        = output.delfafter[:,1:it_e]
-    output.hypo             = output.hypo[1:it_s]
-    output.time_            = output.time_[1:it]
-    output.Vfmax            = output.Vfmax[1:it]
-    alphaa                   = alphaa[1:it]
+    # close files
+    end
+    end
+    end
+    end
+    end
+    end
+    end
+    end
+    end
 
-    #  return d, v, a, 2*v[P[4].iFlt] .+ P[2].Vpl
-    return output, alphaa
-    file["O"] = output
-
-    close(file)
 
 end
 
-mutable struct results
-    seismic_stress::Matrix{Float64}
-    seismic_slipvel::Matrix{Float64}
-    seismic_slip::Matrix{Float64}
-    index_eq::Vector{Float64}
-    is_stress::Matrix{Float64}
-    is_slipvel::Matrix{Float64}
-    is_slip::Matrix{Float64}
-    dSeis::Matrix{Float64}
-    vSeis::Matrix{Float64}
-    aSeis::Matrix{Float64}
-    tStart::Vector{Float64}
-    tEnd::Vector{Float64}
-    taubefore::Matrix{Float64}
-    tauafter::Matrix{Float64}
-    delfafter::Matrix{Float64}
-    hypo::Vector{Float64}
-    time_::Vector{Float64}
-    Vfmax::Vector{Float64}
-end

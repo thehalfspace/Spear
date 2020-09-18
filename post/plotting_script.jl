@@ -99,37 +99,6 @@ function eqCyclePlot(sliprate, FltX)
                   interpolation="bicubic",
                   extent=[0,length(sliprate[1,:]), 0,16])
     
-    ax.set_xlabel("Timesteps")
-    ax.set_ylabel("Depth (km)")
-
-    ax.invert_yaxis()
-    cbar = fig.colorbar(c)
-    #   cbar.set_ticks(cbar.get_ticks()[1:2:end])
-    
-    show()
-    figname = string(path, "slr03.png")
-    fig.savefig(figname, dpi = 300)
-    
-end
-
-# spatiotemporal imshow
-function sptempPlot(seismic_slipvel, FltX)
-    
-    indx = findall(abs.(FltX) .<= 16)[1]
-    value = transpose(seismic_slipvel[:, indx:end])
-    
-    depth = -FltX[indx:end]
-
-    plot_params()
-    fig = PyPlot.figure(figsize=(12.2, 4.45))
-    ax = fig.add_subplot(111)
-
-    # for sliprate
-    c = ax.imshow(value, cmap="inferno", aspect="auto",
-                  norm=matplotlib.colors.LogNorm(vmin=1e-12, vmax=1e0),
-                  interpolation="bicubic",
-                  extent=[0,length(seismic_slipvel), 0,16])
-
     # for stress
     #  c = ax.imshow(value, cmap="inferno", aspect="auto",
                   #  vmin=22.5, vmax=40,
@@ -144,17 +113,18 @@ function sptempPlot(seismic_slipvel, FltX)
     #   cbar.set_ticks(cbar.get_ticks()[1:2:end])
     
     show()
-    figname = string(path, "slr03.png")
+    figname = string(path, "interpolated_sliprate.png")
     fig.savefig(figname, dpi = 300)
+    
 end
 
 # Plot Vfmax
-function VfmaxPlot(Vfmax, time_, yr2sec)
+function VfmaxPlot(Vfmax, t, yr2sec)
     plot_params()
     fig = PyPlot.figure(figsize=(7.2, 3.45))
     ax = fig.add_subplot(111)
     
-    ax.plot(time_./yr2sec, Vfmax, lw = 2.0)
+    ax.plot(t./yr2sec, Vfmax, lw = 2.0)
     ax.set_xlabel("Time (years)")
     ax.set_ylabel("Max. Slip rate (m/s)")
     ax.set_yscale("log")
@@ -166,19 +136,19 @@ function VfmaxPlot(Vfmax, time_, yr2sec)
 end
 
 # Plot alpha
-function alphaaPlot(alphaa, time_, yr2sec)
+function alphaaPlot(alphaa, t, yr2sec)
     plot_params()
     fig = PyPlot.figure(figsize=(7.2, 3.45))
     ax = fig.add_subplot(111)
 
-    ax.plot(time_./yr2sec, alphaa, lw = 2)
+    ax.plot(t./yr2sec, alphaa, lw = 2)
     ax.set_xlabel("Time (years)")
     ax.set_ylabel("Shear Modulus Contrast (%)")
     #  ax.set_xlim([230,400])
     show()
 
 
-    figname = string(path, "alphaa_01.png")
+    figname = string(path, "alpha_01.png")
     fig.savefig(figname, dpi = 300)
 end
 
@@ -205,7 +175,7 @@ function cumSlipPlot(delfsec, delfyr, FltX)
     
     show()
     
-    figname = string(path, "cumslip_02.png")
+    figname = string(path, "cumulative_slip.png")
     fig.savefig(figname, dpi = 300)
 
 end
@@ -216,15 +186,15 @@ function icsPlot(a_b, Seff, tauo, FltX)
     fig = PyPlot.figure(figsize=(7.2, 4.45))
     ax = fig.add_subplot(111)
     
-    ax.plot(Seff/1e6, -FltX./1e3, "k-", label="Normal Stress")
-    ax.plot(tauo/1e6, -FltX./1e3, "k--", label="Shear Stress")
+    ax.plot(Seff, FltX, "k-", label="Normal Stress")
+    ax.plot(tauo, FltX, "k--", label="Shear Stress")
     ax.set_xlabel("Stresses (MPa)")
     ax.set_ylabel("Depth (km)")
     plt.legend(loc="lower right") 
     
     col="tab:blue"
     ax2 = ax.twiny()
-    ax2.plot(a_b, -FltX./1e3, label="(a-b)")
+    ax2.plot(a_b, FltX, label="(a-b)")
     ax2.set_xlabel("Rate-state friction value", color=col)
     ax2.get_xaxis().set_tick_params(color=col)
     ax2.tick_params(axis="x", labelcolor=col)

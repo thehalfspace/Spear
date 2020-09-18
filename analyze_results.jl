@@ -1,14 +1,13 @@
 using DelimitedFiles
 
-include("post/earthquake_cycles.jl")
-include("post/paleoseismic_plots.jl")
-include("post/cumulative_slip.jl")
+include("$(@__DIR__)/post/event_details.jl")
+include("$(@__DIR__)/post/plotting_script.jl")
 
 # path to save files
-global path = "$(@__DIR__)/plots/save_dynamic03/"
+global path = "$(@__DIR__)/plots/test_01/"
 mkpath(path)
 
-global out_path = "$(@__DIR__)/data/save_dynamic03/"
+global out_path = "$(@__DIR__)/data/test_01/"
 
 # Global variables
 yr2sec = 365*24*60*60
@@ -31,7 +30,12 @@ sliprate = readdlm(string(out_path, "sliprate.out"), header=false)
 # Order of storage: Seff, tauo, FltX, cca, ccb, xLf
 params = readdlm(string(out_path, "params.out"), header=false)
 
+Seff = params[1,:]
+tauo = params[2,:]
 FltX = params[3,:]
+cca = params[4,:]
+ccb = params[5,:]
+Lc = params[6,:]
 
 # Index of fault from 0 to 18 km
 flt18k = findall(FltX .<= 18)[1]
