@@ -4,10 +4,10 @@ include("$(@__DIR__)/post/event_details.jl")
 include("$(@__DIR__)/post/plotting_script.jl")
 
 # path to save files
-global path = "$(@__DIR__)/plots/test_01/"
+global path = "$(@__DIR__)/plots/example/"
 mkpath(path)
 
-global out_path = "$(@__DIR__)/data/test_01/"
+global out_path = "$(@__DIR__)/data/example/"
 
 # Global variables
 yr2sec = 365*24*60*60

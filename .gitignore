@@ -1,3 +1,4 @@
+# Ignore files with these extensions
 *.swp
 *.out
 *.pbs
@@ -6,3 +7,6 @@
 *.jpg
 *.gif
 *.DS_Store
+
+# Don't ignore these files
+!plots/examples/
