@@ -1,0 +1,14 @@
+language: julia
+os:
+  - linux
+  - osx
+julia:
+  - 1.1
+  - nightly
+branches:
+  only:
+    - master
+    - /^release-.*$/
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+notifications:
+  email: false

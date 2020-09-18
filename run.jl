@@ -16,7 +16,7 @@ using Base.Threads
 include("$(@__DIR__)/par.jl")	    #	Set Parameters
 
 # Put the resolution for the simulation here: should be an integer
-resolution = 4
+resolution = 2
 
 # Output directory to save data
 out_dir = "$(@__DIR__)/data/test_01/"
