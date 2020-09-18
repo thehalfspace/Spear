@@ -34,8 +34,8 @@ Under development. Working on MPI based parallelization.
 ## Documentation
 
 ## Screenshots
-![Demo Cumulative Slip](plots/example/cumulative_slip.png)
-![Demo Peak Sliprate](plots/example/Vfmax01.png)
+![Demo Cumulative Slip](plots/example/cumulative_slip.png | width=100)
+![Demo Peak Sliprate](plots/example/Vfmax01.png | width=100)
 
 
 ## References
