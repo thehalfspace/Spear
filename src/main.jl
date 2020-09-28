@@ -318,10 +318,13 @@ function main(P)
             # Sliprate and NR search
             psi1, Vf1, tau1, psi2, Vf2, tau2 = FBC!(P[1].IDstate, P[3], NFBC, P[1].FltNglob, psi1, Vf1, tau1, psi2, Vf2, tau2, psi, Vf, FltVfree, dt)
 
+            ### Friction laws
+
             tau .= tau2 .- P[3].tauo
             tau[iFBC] .= 0.
             psi .= psi2
             a[P[4].iFlt] .= a[P[4].iFlt] .- P[3].FltB.*tau
+            
             ########## End of fault boundary condition ##############
 
 

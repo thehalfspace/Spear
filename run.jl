@@ -19,7 +19,7 @@ include("$(@__DIR__)/par.jl")	    #	Set Parameters
 resolution = 2
 
 # Output directory to save data
-out_dir = "$(@__DIR__)/data/test_01/"
+out_dir = "$(@__DIR__)/data/test_02/"
 mkpath(out_dir)
 
 P = setParameters(0e3,resolution)      # args = fault zone depth, resolution
@@ -27,6 +27,7 @@ P = setParameters(0e3,resolution)      # args = fault zone depth, resolution
 include("$(@__DIR__)/src/dtevol.jl")
 include("$(@__DIR__)/src/NRsearch.jl")
 include("$(@__DIR__)/src/otherFunctions.jl")
+include("$(@__DIR__)/src/frictionLaws.jl")
 
 include("$(@__DIR__)/src/main.jl")
 
