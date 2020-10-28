@@ -4,10 +4,10 @@ include("$(@__DIR__)/post/event_details.jl")
 include("$(@__DIR__)/post/plotting_script.jl")
 
 # path to save files
-global path = "$(@__DIR__)/plots/example/"
+global path = "$(@__DIR__)/plots/mature_heal_15yr/"
 mkpath(path)
 
-global out_path = "$(@__DIR__)/data/example/"
+global out_path = "$(@__DIR__)/data/mature_heal_15yr/"
 
 # Global variables
 yr2sec = 365*24*60*60
@@ -25,7 +25,7 @@ tauafter = event_stress[:,indx+1:end]
 
 delfafter = readdlm(string(out_path, "coseismic_slip.out"), header=false)
 #  slip = readdlm(string(out_path, "slip.out"), header=false)
-sliprate = readdlm(string(out_path, "sliprate.out"), header=false)
+#  sliprate = readdlm(string(out_path, "sliprate.out"), header=false)
 
 # Order of storage: Seff, tauo, FltX, cca, ccb, xLf
 params = readdlm(string(out_path, "params.out"), header=false)
@@ -57,8 +57,8 @@ delfsec = readdlm(string(out_path, "delfsec.out"))
 delfyr = readdlm(string(out_path, "delfyr.out"))
 stress = readdlm(string(out_path, "stress.out"), header=false)
 
-#  start_index = get_index(seismic_stress, taubefore)
-#  stressdrops = taubefore .- tauafter
+start_index = get_index(stress', taubefore')
+stressdrops = taubefore .- tauafter
 
-#  Mw, del_sigma, fault_slip, rupture_len =
-        #  moment_magnitude_new(mu, P1, P3.FltX, delfafter, stressdrops, time_);
+Mw, del_sigma, fault_slip, rupture_len =
+        moment_magnitude_new(mu, FltX, delfafter', stressdrops', t);

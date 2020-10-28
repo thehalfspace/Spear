@@ -16,10 +16,11 @@
 function healing2(t,tStart,dam)
     """ hmax: coseismic damage amplitude
         r: healing rate (0.05 => 80 years to heal completely)
+                        (0.5 => 15 years to heal completely)
                         (0.8 => 8 years to heal completely)
     """
-    hmax = 0.04
-    r = 0.5    # 0.05 (debug05)
+    hmax = 0.05
+    r =  0.7   # 1/1.5
 
     hmax*(1 .- exp.(-r*(t .- tStart)/P[1].yr2sec)) .+ dam
 end
@@ -38,7 +39,7 @@ function main(P)
     #  damage_amount::Float64 = 1.0
 
     # Shear modulus ratio of damage/host rock
-    alphaa = 0.90
+    alphaa = 0.80
 
     # Time solver variables
     dt::Float64 = P[2].dt0
@@ -261,29 +262,29 @@ function main(P)
             #---------------
             # Healing stuff: Ignore for now
             # --------------
-            #  if it > 3
-            #  #  if t > 12*P[1].yr2sec
-                #  alphaa = healing2(t, tStart2, dam)
-                #  #  alphaa[it] = αD(t, tStart2, dam)
+            if it > 3
+            #  if t > 12*P[1].yr2sec
+                alphaa = healing2(t, tStart2, dam)
+                #  alphaa[it] = αD(t, tStart2, dam)
 
-                #  for id in did
-                    #  Ksparse[id] = alphaa*Korig[id]
-                #  end
+                for id in did
+                    Ksparse[id] = alphaa*Korig[id]
+                end
 
-                #  #  println("alpha healing = ", alphaa[it])
+                #  println("alpha healing = ", alphaa[it])
 
-                #  # Linear solver stuff
-                #  kni = -Ksparse[P[4].FltNI, P[4].FltNI]
-                #  nKsparse = -Ksparse
-                #  # multigrid
-                #  ml = ruge_stuben(kni)
-                #  p = aspreconditioner(ml)
+                # Linear solver stuff
+                kni = -Ksparse[P[4].FltNI, P[4].FltNI]
+                nKsparse = -Ksparse
+                # multigrid
+                ml = ruge_stuben(kni)
+                p = aspreconditioner(ml)
 
-                #  # faster matrix multiplication
-                #  #  Ksparse = Ksparse'
-                #  #  nKsparse = nKsparse'
-                #  #  kni = kni'
-            #  end
+                # faster matrix multiplication
+                #  Ksparse = Ksparse'
+                #  nKsparse = nKsparse'
+                #  kni = kni'
+            end
 
         
         # If isolver != 1, or max slip rate is < 10^-2 m/s
@@ -376,35 +377,35 @@ function main(P)
                 # Time condition of 10 years
                 #  if t > 10*P[1].yr2sec
 
-                    # use this for no permanent damage
-                    #  alphaa = 0.6
-                    #  dam = alphaa
+                    #  use this for no permanent damage
+                    alphaa = 0.8
+                    dam = alphaa
 
 
-                    # Use this for permanent damage
+                    #  Use this for permanent damage
                     #  alphaa = alphaa - 0.05
                     #  dam = alphaa
                     #  if dam < 0.60
                         #  alphaa = 0.60
                         #  dam = 0.60
                     #  end
-                    
-                    tStart2 = t 
-                    
-                    #  for id in did
-                        #  Ksparse[id] = alphaa*Korig[id]
-                    #  end
 
-                    #  # Linear solver stuff
-                    #  kni = -Ksparse[P[4].FltNI, P[4].FltNI]
-                    #  nKsparse = -Ksparse
-                    #  # multigrid
-                    #  ml = ruge_stuben(kni)
-                    #  p = aspreconditioner(ml)
+                    tStart2 = t
+
+                    for id in did
+                        Ksparse[id] = alphaa*Korig[id]
+                    end
+
+                    # Linear solver stuff
+                    kni = -Ksparse[P[4].FltNI, P[4].FltNI]
+                    nKsparse = -Ksparse
+                    # multigrid
+                    ml = ruge_stuben(kni)
+                    p = aspreconditioner(ml)
 
                 #  end
 
-                #  println("alphaa = ", alphaa)
+                println("alphaa = ", alphaa)
 
             #  end
 

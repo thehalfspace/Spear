@@ -33,6 +33,89 @@ function plot_params()
   #plt.rc("figure", figsize=(7.2, 4.5))
 end
 
+
+# Plot alpha and Vfmax on the same plot
+function healing_analysis(Vf, alphaa, t, yr2sec)
+    plot_params()
+    fig = PyPlot.figure(figsize=(7.2, 4.45))
+    ax = fig.add_subplot(111)
+    
+    ax.plot(t./yr2sec, Vf, lw = 2.0, label="Max. Slip rate")
+    lab1 = "Max. slip rate"
+    ax.set_ylabel("Max. Slip rate (m/s)")
+    ax.set_yscale("log")
+    ax.set_xlim([0, 250])
+    
+    col="tab:red"
+    ax2 = ax.twinx()
+    
+    ax2.plot(t./yr2sec, alphaa.*100, c=col, lw=2.0, label="Shear modulus ratio")
+    lab2 = "Shear modulus ratio"
+    ax.set_xlabel("Time (years)")
+    ax2.set_ylabel("Shear Modulus (% of host rock)")
+    ax2.set_ylim([35, 60])
+    #  ax2.set_ylim([75, 100])
+    ax2.get_xaxis().set_tick_params(color=col)
+    ax2.tick_params(axis="x", labelcolor=col)
+
+    #  ax.legend([lab1, lab2], loc=0)
+    show()
+    
+    figname = string(path, "healing_analysis.png")
+    fig.savefig(figname, dpi = 300)
+end
+
+# Plot the stressdrops after each earthquake
+function stressdrop_2(taubefore, tauafter, FltX)
+    plot_params()
+  
+    i = 1;
+    #  for i in 1:length(stressdrops[1,:])
+      fig = PyPlot.figure(figsize=(7.2, 4.45));
+      ax = fig.add_subplot(111);
+      ax.plot(taubefore, FltX, lw = 2.0, color="tab:orange", 
+              label="Shear stress before the earthquake", alpha=1.0);
+      ax.plot(tauafter, FltX, lw = 2.0, color="tab:blue", 
+              label="Shear stress after the earthquake", alpha=1.0);
+      ax.set_xlabel("Stress drop (MPa)");
+      ax.set_ylabel("Depth (km)");
+      ax.set_ylim([0,24]);
+      ax.set_xlim([15,45]);
+      ax.invert_yaxis();
+      plt.legend();
+      show()
+      
+      figname = string(path, "shear_stress_im_",i,".png");
+      fig.savefig(figname, dpi = 300);
+    #  end
+end
+
+
+# Plot shear stress comparison
+function shear_stress_comp(shear1b, shear1a, shear2b, shear2a, FltX1, FltX2)
+    plot_params()
+   
+    fig = PyPlot.figure(figsize=(7.2, 4.45))
+    ax = fig.add_subplot(111)
+    ax.plot(shear1b, FltX1, lw = 2.0, color="tab:blue",ls=:dashed, 
+            label="Immature Fault Zone: before")
+    ax.plot(shear1a, FltX1, lw = 2.0, color="tab:blue", label="Immature Fault Zone: after")
+    ax.plot(shear2b, FltX2, lw = 2.0, color="tab:orange", ls=:dashed, 
+            label="Mature Fault Zone: before")
+    ax.plot(shear2a, FltX2, lw = 2.0, color="tab:orange", label="Mature Fault Zone: after")
+    ax.set_xlabel("Shear stress (MPa)")
+    ax.set_ylabel("Depth (km)")
+    ax.set_ylim([0,24])
+    ax.invert_yaxis()
+    plt.legend()
+    show()
+    
+    figname = string(path, "Shear_Stress_002.png");
+    fig.savefig(figname, dpi = 300);
+
+end
+
+
 # Plot slip vs event number
 function slipPlot(delfafter2, rupture_len, FltX, Mw, tStart)
     plot_params()
@@ -85,13 +168,13 @@ end
 
 # Cumulative sliprate plot
 function eqCyclePlot(sliprate, FltX)
-    indx = findall(abs.(FltX) .<= 16e3)[1]
-    value = sliprate[indx:end,10000:end]
+    indx = findall(abs.(FltX) .<= 16)[1]
+    value = sliprate[indx:end,:]
     
-    depth = -FltX[indx:end]./1e3
+    depth = FltX[indx:end]
 
     plot_params()
-    fig = PyPlot.figure(figsize=(9.2, 4.45))
+    fig = PyPlot.figure(figsize=(7.2, 4.45))
     ax = fig.add_subplot(111)
     
     c = ax.imshow(value, cmap="inferno", aspect="auto",
@@ -113,7 +196,7 @@ function eqCyclePlot(sliprate, FltX)
     #   cbar.set_ticks(cbar.get_ticks()[1:2:end])
     
     show()
-    figname = string(path, "interpolated_sliprate.png")
+    figname = string(path, "mature_sliprate_3.png")
     fig.savefig(figname, dpi = 300)
     
 end
@@ -141,7 +224,7 @@ function alphaaPlot(alphaa, t, yr2sec)
     fig = PyPlot.figure(figsize=(7.2, 3.45))
     ax = fig.add_subplot(111)
 
-    ax.plot(t./yr2sec, alphaa, lw = 2)
+    ax.plot(t./yr2sec, alphaa.*100, lw = 2)
     ax.set_xlabel("Time (years)")
     ax.set_ylabel("Shear Modulus Contrast (%)")
     #  ax.set_xlim([230,400])
@@ -149,6 +232,26 @@ function alphaaPlot(alphaa, t, yr2sec)
 
 
     figname = string(path, "alpha_01.png")
+    fig.savefig(figname, dpi = 300)
+end
+
+# Compare alpha
+function alphaComp(a1, t1, a2, t2, a3, t3, yr2sec)
+    plot_params()
+    fig = PyPlot.figure(figsize=(7.2, 3.45))
+    ax = fig.add_subplot(111)
+
+    ax.plot(t1./yr2sec, a1.*100, lw = 2, label="10 yr")
+    ax.plot(t2./yr2sec, a2.*100, lw = 2, label="12 yr")
+    ax.plot(t3./yr2sec, a3.*100, lw = 2, label="15 yr")
+    ax.set_xlabel("Time (years)")
+    ax.set_ylabel("Shear Modulus Ratio (%)")
+    #  ax.set_xlim([230,400])
+    legend()
+    show()
+
+
+    figname = string(path, "alpha_comp.png")
     fig.savefig(figname, dpi = 300)
 end
 
@@ -169,7 +272,8 @@ function cumSlipPlot(delfsec, delfyr, FltX)
     ax.set_xlabel("Accumulated Slip (m)")
     ax.set_ylabel("Depth (km)")
     ax.set_ylim([0,24])
-    #  ax.set_xlim([1,20])
+    ax.set_xlim([0,maximum(delfsec2)])
+    ax.set_xlim([0,9.0])
     
     ax.invert_yaxis()
     
@@ -204,5 +308,23 @@ function icsPlot(a_b, Seff, tauo, FltX)
     show()
     
     figname = string(path, "ics_02.png")
+    fig.savefig(figname, dpi = 300)
+end
+
+
+# Plot stressdrop comparison
+function sd_comp(ds_im, tS_im, ds_m, tS_m)
+    plot_params()
+    fig = PyPlot.figure(figsize=(7.2, 4.45))
+    ax = fig.add_subplot(111)
+    
+    ax.scatter(tS_im, ds_im, color="tab:blue", label="Immature")
+    ax.scatter(tS_m, ds_m, color="tab:orange", label="Mature")
+    ax.set_xlabel("Time (yr)")
+    ax.set_ylabel("Stress drops (MPa)")
+    plt.legend() 
+    show()
+    
+    figname = string(path, "del_sigma_tStart.png")
     fig.savefig(figname, dpi = 300)
 end

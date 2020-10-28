@@ -42,7 +42,7 @@ function setParameters(FZdepth, res)
 
     yr2sec::Int = 365*24*60*60
 
-    Total_time::Int = 40*yr2sec     # Set the total time for simulation here
+    Total_time::Int = 300*yr2sec     # Set the total time for simulation here
 
     CFL::Float64 = 0.6	#	Courant stability number
 
