@@ -115,6 +115,27 @@ function shear_stress_comp(shear1b, shear1a, shear2b, shear2a, FltX1, FltX2)
 
 end
 
+# Plot rupture_length vs event time
+function stem_plot(rl1, rl2, rl3, rl4)
+    plot_params()
+    fig = PyPlot.figure(figsize=(7.2, 4.45))
+    ax = fig.add_subplot(111)
+    
+    ax.stem(-rl1./1e3, linefmt="C0-", markerfmt="C0o", basefmt=:None, label="Healing time = 10 yr")
+    ax.stem(-rl2./1e3, linefmt="C1-", markerfmt="C1o", basefmt=:None, label="Healing time = 12 yr")
+    ax.stem(-rl3./1e3, linefmt="C2-", markerfmt="C2o", basefmt=:None, label="Healing time = 15 yr")
+    #  ax.stem(-rl4./1e3, linefmt="C3-", markerfmt="C3o", basefmt=:None, label="Healing time = 20 years")
+    ax.set_xlabel("Event number")
+    #  ax.set_xlabel("Event time (years)")
+    ax.set_ylabel("Rupture length (km)")
+    #  ax.set_xlim([10,300])
+    plt.legend()
+    show()
+    
+    figname = string(path, "stem_plot2.png")
+    fig.savefig(figname, dpi = 300)
+
+end
 
 # Plot slip vs event number
 function slipPlot(delfafter2, rupture_len, FltX, Mw, tStart)
@@ -215,6 +236,31 @@ function VfmaxPlot(Vfmax, t, yr2sec)
     show()
     
     figname = string(path, "Vfmax01.png")
+    fig.savefig(figname, dpi = 300)
+end
+
+# Plot Vsurface
+function VsurfPlot(Vsurf10, Vsurf12, Vsurf15, t10, t12, t15, yr2sec)
+    plot_params()
+    fig = PyPlot.figure(figsize=(8.2, 6.00))
+    ax = fig.add_subplot(311)
+    ax2 = fig.add_subplot(312)
+    ax3 = fig.add_subplot(313)
+    
+    ax.plot(t10./yr2sec, Vsurf10, lw = 2.0, label="Healing time = 10 yr")
+    ax2.plot(t12./yr2sec, Vsurf12, lw = 2.0, label="Healing time = 12 yr")
+    ax3.plot(t15./yr2sec, Vsurf15, lw = 2.0, label="Healing time = 15 yr")
+    ax3.set_xlabel("Time (years)")
+    ax2.set_ylabel("Surface. Slip rate (m/s)")
+    ax.set_yscale("log")
+    ax2.set_yscale("log")
+    ax3.set_yscale("log")
+    #  ax.set_xlim([230,400])
+    #  plt.legend()
+    plt.tight_layout()
+    show()
+    
+    figname = string(path, "Vsurf02.png")
     fig.savefig(figname, dpi = 300)
 end
 
