@@ -1,6 +1,7 @@
 # SPEAR: SPectral element based EARthquake cycle simulator 
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![Build Status](https://travis-ci.com/thehalfspace/Spear.svg?branch=master)](https://travis-ci.com/thehalfspace/Spear)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![Build Status](https://travis-ci.com/thehalfspace/Spear.svg?branch=master)](https://travis-ci.com/thehalfspace/Spear) [![DOI](https://zenodo.org/badge/296673471.svg)](https://zenodo.org/badge/latestdoi/296673471)
+
 
 Numerical simulation of long-term earthquake cycles on a two-dimensional vertical strike-slip fault with dynamic treatment of inertial effects. Written in [Julia](https://julialang.org).
 
