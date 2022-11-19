@@ -25,6 +25,9 @@ function setParameters(FZdepth, res)
     dye::Float64 = LY/NelY #	Size of one element along Y
     Nel::Int = NelX*NelY # Total no. of elements
 
+    println("dxe = ", dxe)
+    println("dye = ", dye)
+
     P::Int = 4		#	Lagrange polynomial degree
     NGLL::Int = P + 1 #	No. of Gauss-Legendre-Lobatto nodes
     FltNglob::Int = NelX*(NGLL - 1) + 1
@@ -42,7 +45,7 @@ function setParameters(FZdepth, res)
 
     yr2sec::Int = 365*24*60*60
 
-    Total_time::Int = 40*yr2sec     # Set the total time for simulation here
+    Total_time::Int = 250*yr2sec     # Set the total time for simulation here
 
     CFL::Float64 = 0.6	#	Courant stability number
 
@@ -72,14 +75,14 @@ function setParameters(FZdepth, res)
     ETA = 0.
 
     # Low velocity layer dimensions
-    ThickX::Float64 = LX - ceil(FZdepth/dxe)*dxe # ~FZdepth m deep
-    ThickY::Float64 = ceil(2.0e3/dye)*dye   # ~ 0.25*2 km wide
+    ThickX::Float64 = LX - 0*ceil(FZdepth/dxe)*dxe # ~FZdepth m deep
+    ThickY::Float64 = 0.0*ceil(0.0e3/dye)*dye   # ~ 0.25*2 km wide
 
     #.......................
     # EARTHQUAKE PARAMETERS
     #.......................
 
-    Vpl::Float64 = 35e-3/yr2sec	#	Plate loading
+    Vpl::Float64 = 1e-9	#	Plate loading
 
     fo::Vector{Float64} = repeat([0.6], FltNglob) #	Reference friction coefficient
     Vo::Vector{Float64} = repeat([1e-6], FltNglob)		#	Reference velocity 'Vo'
@@ -100,6 +103,7 @@ function setParameters(FZdepth, res)
     iglob::Array{Int,3}, x::Vector{Float64}, y::Vector{Float64} =
                         MeshBox!(NGLL, Nel, NelX, NelY, FltNglob, dxe, dye)
     x = x .- LX
+    #return x
     nglob::Int = length(x)
 
     # The derivatives of the Lagrange Polynomials were pre-tabulated
@@ -116,8 +120,8 @@ function setParameters(FZdepth, res)
     # y coordinate = off-fault distance (+ve)
 
 
-    x_out = [6.0, 6.0, 6.0, 6.0, 6.0, 6.0].*(-1e3)  # x coordinate of receiver
-    y_out = [66.0, 130.0, 198.0, 250.0, 330.0, 396.0]     # y coordinate of receiver
+    x_out = [48.0, 48.0, 48.0, 48.0, 48.0, 48.0].*(-1e3)  # x coordinate of receiver
+    y_out = [0.0, 150.0, 300.0, 0.0, 0.0, 0.0]     # y coordinate of receiver
     #  n_receiver = length(x_receiver) # number of receivers
 
     x_out, y_out, out_seis, dist = FindNearestNode(x_out, y_out, x, y)
@@ -193,7 +197,7 @@ function setParameters(FZdepth, res)
     #......................
     cca::Vector{Float64}, ccb::Vector{Float64} = fricDepth(FltX)   # rate-state friction parameters
     Seff::Vector{Float64} = SeffDepth(FltX)       # effective normal stress
-    tauo::Vector{Float64} = tauDepth(FltX)        # initial shear stress
+    tauo::Vector{Float64} = tauDepth(FltX, rho1, vs1)        # initial shear stress
 
     # Kelvin-Voigt Viscosity
     Nel_ETA::Int = 0

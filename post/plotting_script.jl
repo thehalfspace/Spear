@@ -135,6 +135,24 @@ function VfmaxPlot(Vfmax, t, yr2sec)
     fig.savefig(figname, dpi = 300)
 end
 
+function Vfmaxcomp(Vfmax1, t1, Vfmax2, t2, yr2sec)
+    plot_params()
+    fig = PyPlot.figure(figsize=(7.2, 3.45))
+    ax = fig.add_subplot(111)
+    
+    ax.plot(t1./yr2sec, Vfmax1, lw = 2.0, label="Thakur")
+    ax.plot(t2./yr2sec, Vfmax2, lw = 2.0, alpha=0.7, label="Abdelmeguid")
+    ax.set_xlabel("Time (years)")
+    ax.set_ylabel("Max. Slip rate (m/s)")
+    # ax.set_yscale("log")
+    plt.legend()
+    #  ax.set_xlim([230,400])
+    show()
+    
+    figname = string(path, "Vfmax01.png")
+    fig.savefig(figname, dpi = 300)
+end
+
 # Plot alpha
 function alphaaPlot(alphaa, t, yr2sec)
     plot_params()
@@ -199,7 +217,7 @@ function icsPlot(a_b, Seff, tauo, FltX)
     ax2.get_xaxis().set_tick_params(color=col)
     ax2.tick_params(axis="x", labelcolor=col)
     
-    ax.set_ylim([0,16])
+    ax.set_ylim([0,80])
     ax.invert_yaxis()
     show()
     
