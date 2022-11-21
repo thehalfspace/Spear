@@ -13,13 +13,14 @@
 ###############################################################################
 
 function main(P)
-    
+
     # P[1] = integer
     # P[2] = float
     # P[3] = float array
     # P[4] = integer array
     # P[5] = ksparse
     # P[6] = damage_idx
+
 
 
     # Time solver variables
@@ -36,7 +37,7 @@ function main(P)
     # Initialize kinematic field: global arrays
     d::Vector{Float64} = zeros(P[1].nglob)
     v::Vector{Float64} = zeros(P[1].nglob)
-    # v .= 0.5e-3
+    v .= 0.5e-3
     a::Vector{Float64} = zeros(P[1].nglob)
 
     #.....................................
@@ -59,13 +60,7 @@ function main(P)
 
 
     # Initial state variable
-    P3 = P[3]
-    P4 = P[4]
-
-    θo = (P3.xLf./P3.Vo).*exp.( (P3.cca./P3.ccb ).*log.((2*P3.Vo./P[2].Vpl).*sinh.(P3.tauo./(P3.cca.*P3.Seff))) .- (P3.fo./P3.ccb) )
-    psi = P3.fo .+ P3.ccb.*log.(P3.Vo .*θo./P3.xLf)
-
-    # psi = P[3].tauo./(P[3].Seff.*P[3].ccb) - P[3].fo./P[3].ccb - (P[3].cca./P[3].ccb).*log.(2*v[P[4].iFlt]./P[3].Vo)
+    psi = P[3].tauo./(P[3].Seff.*P[3].ccb) - P[3].fo./P[3].ccb - (P[3].cca./P[3].ccb).*log.(2*v[P[4].iFlt]./P[3].Vo)
     psi0 .= psi[:]
 
     isolver::Int = 1
@@ -86,7 +81,7 @@ function main(P)
     tvsx::Float64 = 2e-0*P[1].yr2sec  # 2 years for interseismic period
     tvsxinc::Float64 = tvsx
 
-    tevneinc::Float64 = 0.1    # 0.5 second for seismic period
+    tevneinc::Float64 = 0.1    # 0.1 second for seismic period
     delfref = zeros(P[1].FltNglob)
 
     # Iterators
@@ -100,21 +95,20 @@ function main(P)
     it_s = 0; it_e = 0
     rit = 0
 
-    v[:] .= -0.5*P[2].Vpl
-    # v = v[:] .+ 0.5*P[2].Vpl
-    
-    #Vf = 2*v[P[4].iFlt]
-    Vf = v[P[4].iFlt]
-    
+    v = v[:] .- 0.5*P[2].Vpl
+    Vf = 2*v[P[4].iFlt]
     iFBC::Vector{Int64} = findall(abs.(P[3].FltX) .> 24e3)
     NFBC::Int64 = length(iFBC) + 1
     Vf[iFBC] .= 0.
 
 
-    # v[P[4].FltIglobBC] .= 0.
+    v[P[4].FltIglobBC] .= 0.
 
     # on fault and off fault stiffness
     Ksparse = P[5]
+
+    # Intact rock stiffness
+    Korig = copy(Ksparse)   # K original
 
     # Linear solver stuff
     kni = -Ksparse[P[4].FltNI, P[4].FltNI]
@@ -127,9 +121,14 @@ function main(P)
 
 
     # faster matrix multiplication
-    Ksparse = Ksparse'
-    nKsparse = nKsparse'
-    kni = kni'
+     #  Ksparse = Ksparse'
+     #  nKsparse = nKsparse'
+     #  kni = kni'
+
+    #  Ksparse = ThreadedMul(Ksparse)
+    #  nKsparse = ThreadedMul(nKsparse)
+    #  kni = ThreadedMul(kni)
+
 
     # Save parameters to file
     open(string(out_dir,"params.out"), "w") do io
@@ -141,29 +140,17 @@ function main(P)
         write(io, join(P[3].xLf, " "), "\n")
     end
 
-    # Output LOCATIONS
-    sta_loc = [0.0, 2.5, 5.0, 7.5, 10.0, 12.5, 15.0, 17.5, 20.0, 25.0, 30.0, 35.0] 
-    nseis = length(sta_loc)
-    outseis::Array{Int} = zeros(nseis)
-
-    for i in 1:nseis
-        outseis[i] = findall(-P[3].FltX./1e3 .>= sta_loc[i])[end]
-    end
 
     # Open files to begin writing
-    #open(string(out_dir,"stress.out"), "w") do stress
+    open(string(out_dir,"stress.out"), "w") do stress
     open(string(out_dir,"sliprate.out"), "w") do sliprate
-    #open(string(out_dir,"slip.out"), "w") do slip
+    open(string(out_dir,"slip.out"), "w") do slip
     open(string(out_dir,"delfsec.out"), "w") do dfsec
     open(string(out_dir,"delfyr.out"), "w") do dfyr
     open(string(out_dir,"event_time.out"), "w") do event_time
     open(string(out_dir,"event_stress.out"), "w") do event_stress
     open(string(out_dir,"coseismic_slip.out"), "w") do dfafter
     open(string(out_dir,"time_velocity.out"), "w") do Vf_time
-
-    # Open files for scec format writing
-    open(string(out_dir,"fltst_dp000.out"), "w") do fltst000
-    
 
     #....................
     # Start of time loop
@@ -172,7 +159,7 @@ function main(P)
     t = 0.
     Vfmax = 0.
     
-    # tStart2 = dt
+    tStart2 = dt
     tStart = dt
     tEnd = dt
     taubefore = P[3].tauo
@@ -203,11 +190,11 @@ function main(P)
 
 
                 # Solve d = K^-1F by MGCG
-                # rhs = (mul!(tmp,Ksparse,F))[P[4].FltNI]
-                rhs = (Ksparse*F)[P[4].FltNI]
+                rhs = (mul!(tmp,Ksparse,F))[P[4].FltNI]
+                #  rhs = (Ksparse*F)[P[4].FltNI]
 
-                # direct solver
-                #  dnew = (kni\rhs)
+                # direct inversion
+                #  dnew = -(kni\rhs)
 
                 # mgcg
                 dnew = cg!(dnew, kni, rhs, Pl=p, reltol=1e-6)
@@ -220,8 +207,8 @@ function main(P)
 
                 # Compute on-fault stress
                 a .= 0.
-                # mul!(a,Ksparse,d)
-                a = Ksparse*d
+                mul!(a,Ksparse,d)
+                #   a = Ksparse*d
 
                 # Enforce K*d to be zero for velocity boundary
                 a[P[4].FltIglobBC] .= 0.
@@ -249,6 +236,7 @@ function main(P)
             a .= 0.
             d[P[4].FltIglobBC] .= 0.
             v[P[4].FltIglobBC] .= 0.
+
         
         # If isolver != 1, or max slip rate is < 10^-2 m/s
         else
@@ -264,8 +252,8 @@ function main(P)
             a .= 0.
 
             # Internal forces -K*d[t+1] stored in global array 'a'
-            # mul!(a,nKsparse,d)
-            a = nKsparse*d
+            mul!(a,nKsparse,d)
+            #   a = nKsparse*d
 
             # Enforce K*d to be zero for velocity boundary
             a[P[4].FltIglobBC] .= 0.
@@ -328,15 +316,16 @@ function main(P)
             tEnd = t 
             tauafter = (tau +P[3].tauo)./1e6
             
-
             # Save start and end time and stress
-            #write(event_time, join(hcat(tStart,tEnd, -hypo), " "), "\n")
-            #write(event_stress, join(hcat(taubefore, tauafter), " "), "\n")
-            #write(dfafter, join(delfafter, " "), "\n")
+            write(event_time, join(hcat(tStart,tEnd, -hypo), " "), "\n")
+            write(event_stress, join(hcat(taubefore, tauafter), " "), "\n")
+            write(dfafter, join(delfafter, " "), "\n")
             
             slipstart = 0
             
         end
+        
+
 
         #-----
         # Output the variables certain timesteps: 2yr interseismic, 1 sec dynamic
@@ -345,12 +334,7 @@ function main(P)
             ntvsx = ntvsx + 1
             idd += 1
             #  write(stress, join((tau + P[3].tauo)./1e6, " "), "\n")
-            #write(dfyr, join(2*d[P[4].iFlt] .+ P[2].Vpl*t, " "), "\n")
-            
-            # Write stress and slip
-            write(slip, join(t, " ", 2*d[P[4].iFlt] .+ P[2].Vpl*t), "\n")
-            write(stress, join(t, " ", tau + P[3].tauo./1e6), "\n")
-
+            write(dfyr, join(2*d[P[4].iFlt] .+ P[2].Vpl*t, " "), "\n")
 
             tvsx = tvsx + tvsxinc
         end
@@ -363,21 +347,15 @@ function main(P)
                 tevneb = t
                 tevne = tevneinc
 
-                # Write stress and slip
-                write(slip, join(t, " ", 2*d[P[4].iFlt] .+ P[2].Vpl*t), "\n")
-                write(stress, join(t, " ", tau + P[3].tauo./1e6), "\n")
                 #  write(stress, join((tau + P[3].tauo)./1e6, " "), "\n")
-                #write(dfsec, join(2*d[P[4].iFlt] .+ P[2].Vpl*t, " "), "\n")
+                write(dfsec, join(2*d[P[4].iFlt] .+ P[2].Vpl*t, " "), "\n")
             end
 
             if idelevne == 1 && (t - tevneb) > tevne
                 nevne = nevne + 1
                 idd += 1
 
-                # Write stress and slip
-                write(slip, join(t, " ", 2*d[P[4].iFlt] .+ P[2].Vpl*t), "\n")
-                write(stress, join(t, " ", tau + P[3].tauo./1e6), "\n")
-                #write(dfsec, join(2*d[P[4].iFlt] .+ P[2].Vpl*t, " "), "\n")
+                write(dfsec, join(2*d[P[4].iFlt] .+ P[2].Vpl*t, " "), "\n")
                 tevne = tevne + tevneinc
             end
 
@@ -394,6 +372,12 @@ function main(P)
         end
 
 
+        # Write stress, sliprate, slip to file every 10 timesteps
+        if mod(it,10) == 0
+            write(sliprate, join(2*v[P[4].iFlt] .+ P[2].Vpl, " "), "\n")
+            write(stress, join((tau + P[3].tauo)./1e6, " "), "\n")
+        end
+
         # Determine quasi-static or dynamic regime based on max-slip velocity
         #  if isolver == 1 && Vfmax < 5e-3 || isolver == 2 && Vfmax < 2e-3
         if isolver == 1 && Vfmax < 5e-3 || isolver == 2 && Vfmax < 2e-3
@@ -402,11 +386,8 @@ function main(P)
             isolver = 2
         end
 
-        # Write SCEC output
-        # println(2*v[P4.iFlt][outseis[1]] .+ P[2].Vpl)
-        write(fltst000, join(hcat(t, " ", 2*d[P4.iFlt][outseis[1]] .+ P[2].Vpl*t, 
-                            " ", 2*v[P4.iFlt][outseis[1]] .+ P[2].Vpl, " ",
-                            (tau[outseis[1]] + P[3].tauo[outseis[1]])./1e6), " "), "\n")
+        # Write max sliprate and time
+        write(Vf_time, join(hcat(t,Vfmax,Vf[end]), " "), "\n")
 
         # Compute next timestep dt
         dt = dtevol!(dt , dtmin, P[3].XiLf, P[1].FltNglob, NFBC, current_sliprate, isolver)
@@ -423,9 +404,7 @@ function main(P)
     end
     end
     end
-    #end
-    #end
+    end
 
 
 end
-

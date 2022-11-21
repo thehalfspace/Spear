@@ -61,8 +61,8 @@ rho2 = 2500
 vs2 = 0.6*vs1
 mu = rho2*vs2^2
 
-delfsec = readdlm(string(out_path, "delfsec.out"))              # slip along depth of fault plotted every 0.1 second (edit line 89 in src/main.jl to change)
-delfyr = readdlm(string(out_path, "delfyr.out"))                # slip along depth plotted every 2 years (edit line 86 to change)
+delfsec = readdlm(string(out_path, "delfsec.out"))              # slip along depth of fault plotted every 0.1 second (edit line 84 in src/main.jl to change)
+delfyr = readdlm(string(out_path, "delfyr.out"))                # slip along depth plotted every 2 years (edit line 81 to change)
 #stress = readdlm(string(out_path, "stress.out"), header=false)  # this is shear stress along depth and time: again, very large file so I typically don't save this 
 
 #start_index = get_index(stress', taubefore')

@@ -45,7 +45,7 @@ function setParameters(FZdepth, res)
 
     yr2sec::Int = 365*24*60*60
 
-    Total_time::Int = 250*yr2sec     # Set the total time for simulation here
+    Total_time::Int = 150*yr2sec     # Set the total time for simulation here
 
     CFL::Float64 = 0.6	#	Courant stability number
 
@@ -197,7 +197,7 @@ function setParameters(FZdepth, res)
     #......................
     cca::Vector{Float64}, ccb::Vector{Float64} = fricDepth(FltX)   # rate-state friction parameters
     Seff::Vector{Float64} = SeffDepth(FltX)       # effective normal stress
-    tauo::Vector{Float64} = tauDepth(FltX, rho1, vs1)        # initial shear stress
+    tauo::Vector{Float64} = tauDepth(FltX)        # initial shear stress
 
     # Kelvin-Voigt Viscosity
     Nel_ETA::Int = 0

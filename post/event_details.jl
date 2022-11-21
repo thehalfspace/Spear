@@ -78,9 +78,10 @@ end
 #       dimension along depth is the same as the rupture
 #       dimension perpendicular to the plane
 #..........................................................
-function moment_magnitude_new(mu, P3, FltX, delfafter, stressdrops ,time_)
+function moment_magnitude_new(mu, FltX, delfafter, stressdrops ,time_)
     # Final coseismic slip of each earthquake
     #  delfafter, stressdrops = Coslip(S, Slip, SlipVel, Stress, time_)
+    FltNglob = length(FltX)
 
     iter = length(delfafter[1,:])
     seismic_moment = zeros(iter)
@@ -91,7 +92,7 @@ function moment_magnitude_new(mu, P3, FltX, delfafter, stressdrops ,time_)
 
     del_sigma = zeros(iter)
     
-    dx = diff(FltX)
+    dx = diff(FltX).*1e3
 
     for i = 1:iter
         
@@ -102,7 +103,7 @@ function moment_magnitude_new(mu, P3, FltX, delfafter, stressdrops ,time_)
         # zdim = rupture along z dimension = depth rupture dimension
         area = 0; zdim = 0; temp_sigma = 0; temp_slip = 0
 
-        for j = 1:P3.FltNglob
+        for j = 1:FltNglob
             if delfafter[j,i] >= slip_thres
                 area = area + delfafter[j,i]*dx[j-1]
                 zdim = zdim + dx[j-1]
@@ -127,4 +128,3 @@ function moment_magnitude_new(mu, P3, FltX, delfafter, stressdrops ,time_)
 
     return Mw, del_sigma, fault_slip, rupture_len
 end
-
