@@ -151,15 +151,15 @@ function main(P)
     end
 
     # Open files to begin writing
-    open(string(out_dir,"stress.out"), "w") do stress
-    #open(string(out_dir,"sliprate.out"), "w") do sliprate
-    open(string(out_dir,"slip.out"), "w") do slip
-    #open(string(out_dir,"delfsec.out"), "w") do dfsec
-    #open(string(out_dir,"delfyr.out"), "w") do dfyr
-    #open(string(out_dir,"event_time.out"), "w") do event_time
-    #open(string(out_dir,"event_stress.out"), "w") do event_stress
-    #open(string(out_dir,"coseismic_slip.out"), "w") do dfafter
-    #open(string(out_dir,"time_velocity.out"), "w") do Vf_time
+    #open(string(out_dir,"stress.out"), "w") do stress
+    open(string(out_dir,"sliprate.out"), "w") do sliprate
+    #open(string(out_dir,"slip.out"), "w") do slip
+    open(string(out_dir,"delfsec.out"), "w") do dfsec
+    open(string(out_dir,"delfyr.out"), "w") do dfyr
+    open(string(out_dir,"event_time.out"), "w") do event_time
+    open(string(out_dir,"event_stress.out"), "w") do event_stress
+    open(string(out_dir,"coseismic_slip.out"), "w") do dfafter
+    open(string(out_dir,"time_velocity.out"), "w") do Vf_time
 
     # Open files for scec format writing
     open(string(out_dir,"fltst_dp000.out"), "w") do fltst000
@@ -418,11 +418,11 @@ function main(P)
     end
     end
     end
-    #end
-    #end
-    #end
-    #end
-    #end
+    end
+    end
+    end
+    end
+    end
     #end
     #end
 
