@@ -23,13 +23,25 @@ function material_properties(NelX, NelY,NGLL, dxe, dye, ThickX, ThickY, wgll2, r
     W
 end
 
+#=
+        FZ-oute  FZ-inner Fault
+        V           V   V
+  ------P1--------------|
+         \          |   |
+          \         |   |
+           \        |   |
+          P2 -------|   |
+                    |   |
+                    |   |
+=#
+
 
 
 # Material properties for a trapezium damage zone
 # Linear function: shape of trapezoid
 function line(x,y)
-    P1 = [0 3e3]
-    P2 = [-8e3 1.5e3]
+    P1 = [0 3e3]        # Top point of the outer damage zone in flower structure
+    P2 = [-8e3 1.5e3]   # Bottom point
 
     f = (y - P2[2]) - ((P1[2]-P2[2])/(P1[1]-P2[1]))*(x - P2[1])
 
@@ -42,16 +54,16 @@ function rigid(x,y)
     rho1::Float64 = 2670
     vs1::Float64 = 3464
     
-    rho2 = 0.6*rho1
-    vs2 = 0.6*vs1
-    rho3 = 0.8*rho1
-    vs3 = 0.8*vs1
+    rho2 = 0.6*rho1     # Inner damage zone
+    vs2 = 0.6*vs1       # Inner damage zone
+    rho3 = 0.8*rho1     # outer damage zone
+    vs3 = 0.8*vs1       # outer damage zone
     
     rhoglob::Array{Float64} = zeros(length(x))
     vsglob::Array{Float64} = zeros(length(x))
 
     for i = 1:length(x)
-        if x[i] > -8e3
+        if x[i] > -8e3          # Depth of the outer damage zone
             if line(x[i],y[i]) < 0
                 rhoglob[i] = rho3
                 vsglob[i] = vs3
@@ -67,7 +79,7 @@ function rigid(x,y)
     end
 
     for i = 1:length(x)
-        if y[i]<0.25e3
+        if y[i]<0.25e3          # Thickness of the inner damage zone
             rhoglob[i] = rho2
             vsglob[i] = vs2
         end
