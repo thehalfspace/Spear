@@ -12,7 +12,7 @@ Under development. Working on MPI based parallelization.
 - Fully dynamic treatment of seismic events
 - Rate-and-state-dependent friction with aging laws 
 - Adaptive time-stepping to switch between interseismic and seismic events
-- Customizable to include off-fault and on-fault heterogeneites
+- Customizable to include off-fault and on-fault heterogeneities
 - Complex geometry of fault damage zones including gaussian and trapezoid fault damage zones
 - Time-dependent healing of fault damage zones constrained by observations
 
