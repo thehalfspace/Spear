@@ -5,7 +5,7 @@
 Numerical simulation of long-term earthquake cycles on a two-dimensional vertical strike-slip fault with dynamic treatment of inertial effects. Written in [Julia](https://julialang.org).
 
 ## Current Status
-Under development. Working on MPI based parallelization.
+v1.0
 
 ## Features
 - Antiplane strain deformation on planar fault with SH waves
