@@ -28,7 +28,10 @@ include("$(@__DIR__)/src/dtevol.jl")
 include("$(@__DIR__)/src/NRsearch.jl")
 include("$(@__DIR__)/src/otherFunctions.jl")
 
+
+# Uncomment below if running the damage and healing model in fault zones. 
 include("$(@__DIR__)/src/main.jl")
+# include("$(@__DIR__)/src/main_damage_healing.jl")
 
 simulation_time = @elapsed @time main(P)
 
