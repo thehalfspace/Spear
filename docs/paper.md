@@ -27,7 +27,14 @@ affiliations:
    index: 2
  - name: Department of Geophysics, Kyoto University
    index: 3
-date: 19 November 2025
+date: 09 January 2026
+header-includes:
+  - |
+    \makeatletter
+    \ifdefined\citeproc\else
+      \newcommand{\citeproc}[2]{#2}
+    \fi
+    \makeatother
 bibliography: refs.bib
 
 ---
