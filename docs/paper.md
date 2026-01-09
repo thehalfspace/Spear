@@ -67,9 +67,9 @@ The software is open-source and available on Github under GNU license, and can b
 # Figures
 
 ![(a) A conceptual model of a strike-slip fault system with a fault damage zone and the seismogenic zone. This model is two-dimensional with along-strike dimension extending to infinity. (b) Two-dimensional modeling framework based on the conceptual model. The fault-zone half-width and the length scales can be adjusted.
-\label{fig:example}](plots/conceptual_model.png).
+\label{fig:example}](conceptual_model.png).
 
-![Example simulation results showing: (a) The accumulated slip along the fault through multiple earthquake sequences. The orange line shows the slip-contours during an earthquake plotted every 1 sec, and the blue lines show the slip contours between earthquakes plotted every 2 years. (b) The maximum rate of slip along the fault through time. Any event above the threshold of 1 mm/s is interpreted as an earthquake, and the events below the threshold can be interpreted as slow-slip events.](plots/results.png)
+![Example simulation results showing: (a) The accumulated slip along the fault through multiple earthquake sequences. The orange line shows the slip-contours during an earthquake plotted every 1 sec, and the blue lines show the slip contours between earthquakes plotted every 2 years. (b) The maximum rate of slip along the fault through time. Any event above the threshold of 1 mm/s is interpreted as an earthquake, and the events below the threshold can be interpreted as slow-slip events.](results.png)
 
 
 # List of Publications
