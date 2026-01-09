@@ -82,6 +82,7 @@ Zhai, P., & Huang, Y. (2024). The effects of characteristic weakening distance o
 
 
 # Acknowledgements
+This study was supported by the National Science Foundation (Grant Award EAR-1943742) and JSPS KAKENHI (21H05206).
 
 
 # References
